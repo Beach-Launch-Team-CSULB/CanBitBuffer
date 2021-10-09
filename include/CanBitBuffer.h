@@ -31,7 +31,8 @@ public:
 
     CAN_message_t getCanMessage(); 
 
-    //CAN frame config
+    //CAN frame config    
+    uint8_t getMaxBufferSize();//get max size based on if extID is set
     void setExtendedID(bool extID);
     bool getExtendedID();
     
@@ -59,9 +60,7 @@ public:
 
     uint8_t usedBits; //current size of the low level bit buffer
 
-    //compiler pre-processing to figure out how big out array needs to be, in order to avoid dynamic allocation
-    //#define maxBufferSize 29 + (8 * 8)
-    uint8_t getMaxBufferSize();
+
     //private helper methods MiniPacket -> CanPacket
 
     //returns either the ID field in the CAN_message_t or the byte address in the 8 byte buffer
