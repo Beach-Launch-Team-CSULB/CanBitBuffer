@@ -34,10 +34,12 @@ public:
     //CAN frame config
     void setExtendedID(bool extID);
     bool getExtendedID();
+    
+    void printCanMessage();
 
-    void reset(); //resets can packet to be reused. However, old data is not deleted.
+    void reset(); //resets CAN packet to be reused. However, old data is not deleted.
 
-    //private:
+    private:
     CAN_message_t msg; //underlying data structure this class abstracts
 
     //uint8_t maxBufferSize; //maximum possible size of abstracted bit buffer TESTING
@@ -97,7 +99,6 @@ public:
 
     void writeToCAN();
 
-    void printCanMessage();
     void printBits(int data, int size);
 };
 
