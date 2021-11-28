@@ -8,7 +8,8 @@
     can be written to as if it were continuous, rather than an ID field and
     up to 8 separate bytes
 */
-// 29 + 8*8 bit 
+
+// The max writable bits is (29 + 8*8) bits
 #include <Arduino.h>
 #include <FlexCAN.h>
 #include "BitChopper.h"
@@ -29,25 +30,25 @@ public:
     uint8_t getFreeBits();      //returns free space in bits
     bool canFit(uint8_t nBits); //returns true if it can fit nBits more bits. Should be private
 
-    CAN_message_t getCanMessage(); 
+    CAN_message_t getCanMessage();
 
-    //CAN frame config    
-    uint8_t getMaxBufferSize();//get max size based on if extID is set
+    //CAN frame config
+    uint8_t getMaxBufferSize(); //get max size based on if extID is set
     void setExtendedID(bool extID);
     bool getExtendedID();
-    
+
     void printCanMessage();
 
     void reset(); //resets CAN packet to be reused. However, old data is not deleted.
 
-    private:
+private:
     CAN_message_t msg; //underlying data structure this class abstracts
 
     //uint8_t maxBufferSize; //maximum possible size of abstracted bit buffer TESTING
 
     /*
     usedBits is essentially the high-level index of where we are in the abstract bit buffer
-    Ie how many bits we've used out of the total number of bits we have considered continuously.
+    i.e. how many bits we've used out of the total number of bits we have used or read.
 
     When converting MiniPackets to CAN frames, usedBits corresponds with the total number of
     bits we've written to the CAN_message_t. However, when AbstractedCanPacket is constructed
@@ -60,7 +61,6 @@ public:
 
     uint8_t usedBits; //current size of the low level bit buffer
 
-
     //private helper methods MiniPacket -> CanPacket
 
     //returns either the ID field in the CAN_message_t or the byte address in the 8 byte buffer
@@ -72,6 +72,10 @@ public:
     //This is the number of unused bits in our current low level buffer
     uint8_t getBufferFreeSpace(); //corresponds to index of leftmost free bit
 
+    /*
+    Returns the leftmost index which data of bitWidth size
+    can be written to without overwriting data on the left. 
+    */
     uint8_t getBitBoundaryIndex(uint8_t bitWidth);
 
     /*
@@ -79,15 +83,13 @@ public:
     dataWidth is how many bits data contains.
     dataOffset is how far shifted left the relevant bits are
     */
-    void writeBitsHelper(uint32_t data, uint8_t dataWidth, uint8_t dataOffset); //atomic write
+    void writeBitsHelper(uint32_t data, uint8_t dataWidth, uint8_t dataOffset); //atomic write i.e. cannot write accross more than one array element
 
     /*
     This method writes to the CAN message as if it were a continuous bit-buffer.
     In practice this means that it should be easy to write data to it, even if
-    that means writing some if the bits into the ID field, and other parts into
+    that means writing some of the bits into the ID field, and other parts into
     buf[someIndex].
-    data: contains what we're writing to the CAN message
-    dataWidth: tells method how many bits are relevant.
     Store relevant bits starting at LSB moving to MSB for proper function.
     */
 
@@ -96,8 +98,10 @@ public:
     //reads bitWidth bits from msg and returns them. Also increments usedBits.
     uint32_t readBitsHelper(uint8_t bitWidth, uint8_t offset);
 
+    //This returns our bit buffer as a CAN packet which is ready to write to. 
     void writeToCAN();
 
+    //handy function for visualizing binary data
     void printBits(int data, int size);
 };
 

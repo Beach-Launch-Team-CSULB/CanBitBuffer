@@ -6,6 +6,24 @@
 #include "CanBitBuffer.h"
 #include <Streaming.h> //testing
 
+
+void CanBitBuffer::init()
+{
+    usedBits =0;
+}
+//TODO testing
+CanBitBuffer::CanBitBuffer()
+{
+    init();
+    //msg.ext=1;
+}
+//TODO testing
+CanBitBuffer::CanBitBuffer(CAN_message_t incomingCAN_Frame)
+{
+    init();
+    msg = incomingCAN_Frame;
+}
+
 uint8_t CanBitBuffer::getMaxBufferSize()
 {
     if (msg.ext)
@@ -23,7 +41,6 @@ uint8_t CanBitBuffer::getFreeBits()
 //returns true if it can fit nBits more bits
 bool CanBitBuffer::canFit(uint8_t nBits)
 {
-
     if (getFreeBits() - nBits >= 0)
     {
         return true;
@@ -85,6 +102,7 @@ uint8_t CanBitBuffer::getBufferSize()
     else
         return 8;
 }
+
 /*
 returns the index of leftmost free bit, 
 which is also the size of the free space of the current 
@@ -92,7 +110,6 @@ buffer we are writing to (id or buf[i])
 */
 uint8_t CanBitBuffer::getBufferFreeSpace()
 {
-
     uint8_t tempusedBits = usedBits;
     uint8_t idSize;
     if (getExtendedID() == true) //idSize is 29 bits
@@ -207,23 +224,6 @@ uint32_t CanBitBuffer::readBits(uint8_t bitWidth)
     }
     return toReturn;
 }
-void CanBitBuffer::init()
-{
-    usedBits =0;
-}
-//TODO testing
-CanBitBuffer::CanBitBuffer()
-{
-    init();
-    //msg.ext=1;
-}
-//TODO testing
-CanBitBuffer::CanBitBuffer(CAN_message_t incomingCAN_Frame)
-{
-    init();
-    msg = incomingCAN_Frame;
-}
-
 void CanBitBuffer::reset()
 {
     usedBits = 0;
