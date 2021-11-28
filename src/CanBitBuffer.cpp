@@ -14,8 +14,8 @@ void CanBitBuffer::init()
 //TODO testing
 CanBitBuffer::CanBitBuffer()
 {
+    reset();
     init();
-    //msg.ext=1;
 }
 //TODO testing
 CanBitBuffer::CanBitBuffer(CAN_message_t incomingCAN_Frame)
@@ -227,6 +227,13 @@ uint32_t CanBitBuffer::readBits(uint8_t bitWidth)
 void CanBitBuffer::reset()
 {
     usedBits = 0;
+
+    msg.len = 0;
+    msg.id =0;
+    for(int i =0; i<8;i++)
+        msg.buf[i] = 0;
+
+
 }
 //will be deleted, for testing only.
 CAN_message_t CanBitBuffer::getCanMessage()
