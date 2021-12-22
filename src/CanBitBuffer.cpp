@@ -13,14 +13,14 @@ void CanBitBuffer::init()
 //TODO testing
 CanBitBuffer::CanBitBuffer()
 {
+    buf = new uint8_t[8];
     reset();
     init();
 }
-//TODO testing
-CanBitBuffer::CanBitBuffer(CAN_message_t incomingCAN_Frame)
+CanBitBuffer::CanBitBuffer(uint8_t* data)
 {
     init();
-    msg = incomingCAN_Frame;
+    buf = data;
 }
 
 uint8_t CanBitBuffer::getMaxBufferSize()
@@ -47,29 +47,16 @@ bool CanBitBuffer::canFit(uint8_t nBits)
     }
 }
 
-void CanBitBuffer::setExtendedID(bool extendedID)
-{
-    if (usedBits > 0)
-    {
-        Serial.print("\n\nERROR: Modifying CAN Frame ExtendedID field after writing to it is sketchy.\nUse this before writing or call reset() to delete all data.\n\n ");
-        return;
-    }
-    msg.ext = extendedID;
-}
-bool CanBitBuffer::getExtendedID()
-{
-    return msg.ext;
-}
 //private send helper methods
 
-//returns -1 if msg.id is current buffer, else returns index for msg.buf[index]
+//returns index for buf[index]
 int8_t CanBitBuffer::getBufferIndex()
 {
     return usedBits / 8;
 }
 /*
 returns the size of the low-level data unit we're writing to. 
-This can be 29, 11, or 8.
+This can be 29, 11, or 8. 
 */
 uint8_t CanBitBuffer::getBufferSize()
 {
@@ -106,20 +93,16 @@ void CanBitBuffer::writeBitsHelper(uint32_t data, uint8_t dataWidth, uint8_t dat
     uint32_t dataToWrite = bitChopper.extract(extraction, selectedData);
 
     int8_t index = getBufferIndex(); //figure out which part of msg to write to
-    if (index == -1)                 //write to id
-        msg.id = msg.id | dataToWrite;
-    else //write to buf
-    {
-        msg.buf[index] = msg.buf[index] | (uint8_t)dataToWrite;
-    }
+
+    buf[index] = buf[index] | (uint8_t)dataToWrite;
 
     usedBits += dataWidth; //update to indicate we wrote to CAN buffer
 
     //must be done after updating usedBits to ensure index is consistent
-    msg.len = getBufferIndex() + 1; //update length to make sure the message sends properly
+    len = getBufferIndex() + 1; //update length to make sure the message sends properly
 
-    if (msg.len > 8) //in edge case when bit buffer is totally full, msg.len can erroneously be 9.
-        msg.len = 8;
+    if (len > 8) //in edge case when bit buffer is totally full, len can erroneously be 9.
+        len = 8; //testing will need to change before it can be general!!
 }
 void CanBitBuffer::writeBits(uint32_t data, uint8_t dataWidth)
 {
@@ -148,14 +131,7 @@ uint32_t CanBitBuffer::readBitsHelper(uint8_t bitWidth, uint8_t offset)
     BitChopper bitChopper;
 
     uint32_t data;
-    if (bufferIndex < 0)//testing REMOVE WHEN READY
-    {
-        data = msg.id;
-    }
-    else
-    {
-        data = msg.buf[bufferIndex];
-    }
+    data = buf[bufferIndex];
 
     //maps relevant bits in input to the right offset for the output
     uint32_t selectedData = bitChopper.compress(compression, data);
@@ -189,15 +165,14 @@ void CanBitBuffer::reset()
 {
     usedBits = 0;
 
-    msg.len = 0;
-    msg.id = 0;
+    len = 0;
     for (int i = 0; i < 8; i++)
-        msg.buf[i] = 0;
+        buf[i] = 0;
 }
 //will be deleted, for testing only.
-CAN_message_t CanBitBuffer::getCanMessage()
+uint8_t* CanBitBuffer::getBuffer()
 {
-    return msg;
+    return buf;
 }
 
 //useful for testing and debug
@@ -211,20 +186,10 @@ void CanBitBuffer::printBits(int data, int size)
     }
     Serial.print("-");
 }
-void CanBitBuffer::printCanMessage()
+void CanBitBuffer::printBuffer()
 {
-    uint8_t idSize;
-    if (msg.ext)
+    for (int i = 0; i < len; i++)
     {
-        idSize = 29;
-    }
-    else
-    {
-        idSize = 11;
-    }
-    printBits(msg.id, idSize);
-    for (int i = 0; i < msg.len; i++)
-    {
-        printBits(msg.buf[i], 8);
+        printBits(buf[i], 8);
     }
 }

@@ -9,7 +9,7 @@
     up to 8 separate bytes
 */
 
-// The max writable bits is (29 + 8*8) bits
+// The max writable bits is (29 + 8*8) bits OBSOLETE
 #include <Arduino.h>
 #include <FlexCAN.h>
 #include "BitChopper.h"
@@ -22,29 +22,29 @@ class CanBitBuffer
 public:
     void init();
     CanBitBuffer();
-    CanBitBuffer(CAN_message_t msg);
+    CanBitBuffer(uint8_t* data);
 
     void writeBits(uint32_t data, uint8_t dataWidth);
     uint32_t readBits(uint8_t bitWidth);
 
     uint8_t getFreeBits();      //returns free space in bits
-    bool canFit(uint8_t nBits); //returns true if it can fit nBits more bits. Should be private
+    bool canFit(uint8_t nBits); //returns true if it can fit nBits more bits.
 
-    CAN_message_t getCanMessage();
+    uint8_t* getBuffer();
 
-    //CAN frame config
-    uint8_t getMaxBufferSize(); //get max size based on if extID is set
-    void setExtendedID(bool extID);
-    bool getExtendedID();
+    uint8_t getMaxBufferSize(); //get max size based on size of input buffer or bit-level limit
 
-    void printCanMessage();
 
-    void reset(); //resets CAN packet to be reused. However, old data is not deleted.
+    //void printCanMessage();    
+    void printBuffer();
+
+
+    void reset(); //resets CAN packet to be reused. Old Data is deleted.
 
 private:
-    CAN_message_t msg; //underlying data structure this class abstracts
-
-    //uint8_t maxBufferSize; //maximum possible size of abstracted bit buffer TESTING
+    //CAN_message_t msg; //underlying data structure this class abstracts
+    uint8_t* buf;
+    uint8_t len;
 
     /*
     usedBits is essentially the high-level index of where we are in the abstract bit buffer
@@ -97,9 +97,6 @@ private:
 
     //reads bitWidth bits from msg and returns them. Also increments usedBits.
     uint32_t readBitsHelper(uint8_t bitWidth, uint8_t offset);
-
-    //This returns our bit buffer as a CAN packet which is ready to write to. 
-    void writeToCAN();
 
     //handy function for visualizing binary data
     void printBits(int data, int size);
