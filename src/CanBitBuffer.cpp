@@ -6,10 +6,9 @@
 #include "CanBitBuffer.h"
 #include <Streaming.h> //testing
 
-
 void CanBitBuffer::init()
 {
-    usedBits =0;
+    usedBits = 0;
 }
 //TODO testing
 CanBitBuffer::CanBitBuffer()
@@ -26,10 +25,7 @@ CanBitBuffer::CanBitBuffer(CAN_message_t incomingCAN_Frame)
 
 uint8_t CanBitBuffer::getMaxBufferSize()
 {
-    if (msg.ext)
-        return 29 + 64;
-    else
-        return 11 + 64;
+    return 64;
 }
 /*
 returns the total number of additional bits which can be written to this CanBitBuffer.
@@ -58,7 +54,7 @@ void CanBitBuffer::setExtendedID(bool extendedID)
         Serial.print("\n\nERROR: Modifying CAN Frame ExtendedID field after writing to it is sketchy.\nUse this before writing or call reset() to delete all data.\n\n ");
         return;
     }
-        msg.ext = extendedID;
+    msg.ext = extendedID;
 }
 bool CanBitBuffer::getExtendedID()
 {
@@ -69,21 +65,7 @@ bool CanBitBuffer::getExtendedID()
 //returns -1 if msg.id is current buffer, else returns index for msg.buf[index]
 int8_t CanBitBuffer::getBufferIndex()
 {
-    uint8_t tempusedBits = usedBits;
-    //Serial << "in getBufferIndex: \n";
-    //Serial << "usedBits: " << usedBits << endl;
-    uint8_t idSize;
-    if (getExtendedID() == true) //idSize is 29 bits
-        idSize = 29;
-    else //idSize is 11 bits
-        idSize = 11;
-
-    if (tempusedBits < idSize)
-        return -1;
-    else
-        tempusedBits -= idSize;
-
-    return tempusedBits / 8;
+    return usedBits / 8;
 }
 /*
 returns the size of the low-level data unit we're writing to. 
@@ -91,16 +73,7 @@ This can be 29, 11, or 8.
 */
 uint8_t CanBitBuffer::getBufferSize()
 {
-    uint8_t idSize;
-    if (getExtendedID() == true) //idSize is 29 bits
-        idSize = 29;
-    else //idSize is 11 bits
-        idSize = 11;
-
-    if (usedBits < idSize)
-        return idSize;
-    else
-        return 8;
+    return 8;
 }
 
 /*
@@ -110,19 +83,7 @@ buffer we are writing to (id or buf[i])
 */
 uint8_t CanBitBuffer::getBufferFreeSpace()
 {
-    uint8_t tempusedBits = usedBits;
-    uint8_t idSize;
-    if (getExtendedID() == true) //idSize is 29 bits
-        idSize = 29;
-    else //idSize is 11 bits
-        idSize = 11;
-
-    if (tempusedBits < idSize)
-        return idSize - tempusedBits;
-    else
-        tempusedBits -= idSize;
-
-    return 8 - (tempusedBits % 8); //usedBits % 8 is used space, 8 - that is free space
+    return 8 - (usedBits % 8); //usedBits % 8 is used space, 8 - that is free space
 }
 /*
 Returns the leftmost index which data of bitWidth size can be written to without overwriting data on the left. 
@@ -136,7 +97,7 @@ void CanBitBuffer::writeBitsHelper(uint32_t data, uint8_t dataWidth, uint8_t dat
     config compression = {dataWidth, dataOffset}; //take relevant bits our of data
 
     uint8_t destinationOffset = getBitBoundaryIndex(dataWidth); //find leftmost index which will contain data (pack from left to right)
-    config extraction = {dataWidth, destinationOffset};                 //mapping for where our relevant bits go
+    config extraction = {dataWidth, destinationOffset};         //mapping for where our relevant bits go
 
     BitChopper bitChopper;
 
@@ -145,7 +106,7 @@ void CanBitBuffer::writeBitsHelper(uint32_t data, uint8_t dataWidth, uint8_t dat
     uint32_t dataToWrite = bitChopper.extract(extraction, selectedData);
 
     int8_t index = getBufferIndex(); //figure out which part of msg to write to
-    if (index == -1)                         //write to id
+    if (index == -1)                 //write to id
         msg.id = msg.id | dataToWrite;
     else //write to buf
     {
@@ -187,7 +148,7 @@ uint32_t CanBitBuffer::readBitsHelper(uint8_t bitWidth, uint8_t offset)
     BitChopper bitChopper;
 
     uint32_t data;
-    if (bufferIndex < 0)
+    if (bufferIndex < 0)//testing REMOVE WHEN READY
     {
         data = msg.id;
     }
@@ -229,11 +190,9 @@ void CanBitBuffer::reset()
     usedBits = 0;
 
     msg.len = 0;
-    msg.id =0;
-    for(int i =0; i<8;i++)
+    msg.id = 0;
+    for (int i = 0; i < 8; i++)
         msg.buf[i] = 0;
-
-
 }
 //will be deleted, for testing only.
 CAN_message_t CanBitBuffer::getCanMessage()

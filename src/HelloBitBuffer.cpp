@@ -10,24 +10,42 @@ void setup()
 void loop()
 {
   CanBitBuffer bitBuffer;
+  Serial << "Free space: " << bitBuffer.getFreeBits() << endl;
+
+
   int data1Size = 1; //1 bit
   int data1 = 1;
   if (bitBuffer.canFit(data1Size))
     bitBuffer.writeBits(data1, data1Size);
 
   int data2Size = 5;      //5 bit
-  int data2 = (1 << 5) - 1; //31
+  int data2 = 0b11111;
+  //int data2 = (1 << 5) - 1; //31
   if (bitBuffer.canFit(data1Size))
     bitBuffer.writeBits(data2, data2Size);
 
   int data3Size = 5; //5 bit
-  int data3 = 21;    //10101
+  int data3 = 0b10101;    
   if (bitBuffer.canFit(data1Size))
     bitBuffer.writeBits(data3, data3Size);
+
+  Serial << "Free space: " << bitBuffer.getFreeBits() << endl;
+
+  while (bitBuffer.canFit(10))
+  {
+    bitBuffer.writeBits(0b0001111000, 10);
+  }
+  Serial << "Free space: " << bitBuffer.getFreeBits() << endl;
+
+  while (bitBuffer.canFit(3))
+  {
+    bitBuffer.writeBits(0b001, 3);
+  }
 
   Serial << "binary CAN Message: ";
   bitBuffer.printCanMessage();
   Serial << endl;
+
   
   CAN_message_t output = bitBuffer.getCanMessage();//ready for CAN Bus
   //sendCAN frame here
@@ -52,7 +70,9 @@ void loop()
   Serial << "data3Copy: " << data3Copy << endl << endl;
   
 
-  // put your main code here, to run repeatedly:
+  Serial << "Free space: " << bitBuffer.getFreeBits() << endl;
+
+
 
   while(1)
     delay(1000);//only do this sketch once
