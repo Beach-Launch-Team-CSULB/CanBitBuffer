@@ -22,18 +22,17 @@ class CanBitBuffer
 public:
     void init();
     CanBitBuffer();
-    CanBitBuffer(uint8_t* data);
+    CanBitBuffer(int8_t* data, int_fast32_t sizeInBits);
 
-    void writeBits(uint32_t data, uint8_t dataWidth);
-    uint32_t readBits(uint8_t bitWidth);
+    void writeBits(int32_t data, int8_t dataWidth);
+    int32_t readBits(int8_t bitWidth);
+    int getFreeBits();      //returns free space in bits
+    bool canFit(int nBits); //returns true if it can fit nBits more bits.
 
-    uint8_t getFreeBits();      //returns free space in bits
-    bool canFit(uint8_t nBits); //returns true if it can fit nBits more bits.
+    int8_t* getBuffer();
 
-    uint8_t* getBuffer();
-
-    uint8_t getMaxBufferSize(); //get max size based on size of input buffer or bit-level limit
-
+    int getMaxBufferSize(); //get max size based on size of input buffer or bit-level limit
+    int getArraySize();
 
     //void printCanMessage();    
     void printBuffer();
@@ -42,9 +41,8 @@ public:
     void reset(); //resets CAN packet to be reused. Old Data is deleted.
 
 private:
-    //CAN_message_t msg; //underlying data structure this class abstracts
-    uint8_t* buf;
-    uint8_t len;
+    int8_t* buf;
+    int8_t len;
 
     /*
     usedBits is essentially the high-level index of where we are in the abstract bit buffer
@@ -59,31 +57,34 @@ private:
     of all the MiniPackets this AbstractedCanPacket contains.
     */
 
-    uint8_t usedBits; //current size of the low level bit buffer
+    int usedBits; //current size of the low level bit buffer
+
+
+    int maxSize;//in bits
 
     //private helper methods MiniPacket -> CanPacket
 
     //returns either the ID field in the CAN_message_t or the byte address in the 8 byte buffer
-    int8_t getBufferIndex();
+    int_fast32_t getBufferIndex();
 
-    //size of the current CAN_message_t buffer we're writing to. Can be 29, 11, or 8.
-    uint8_t getBufferSize();
+    //size of the current CAN_message_t buffer we're writing to. Can be 29, 11, or 8. TESTING OLD DOCUMENTATION
+    int8_t getBufferSize();
 
     //This is the number of unused bits in our current low level buffer
-    uint8_t getBufferFreeSpace(); //corresponds to index of leftmost free bit
+    int8_t getBufferFreeSpace(); //corresponds to index of leftmost free bit
 
     /*
     Returns the leftmost index which data of bitWidth size
     can be written to without overwriting data on the left. 
     */
-    uint8_t getBitBoundaryIndex(uint8_t bitWidth);
+    int8_t getBitBoundaryIndex(int8_t bitWidth);
 
     /*
     data is the data we're writing to the low level buffer.
     dataWidth is how many bits data contains.
     dataOffset is how far shifted left the relevant bits are
     */
-    void writeBitsHelper(uint32_t data, uint8_t dataWidth, uint8_t dataOffset); //atomic write i.e. cannot write accross more than one array element
+    void writeBitsHelper(int32_t data, int8_t dataWidth, int8_t dataOffset); //atomic write i.e. cannot write accross more than one array element
 
     /*
     This method writes to the CAN message as if it were a continuous bit-buffer.
@@ -96,7 +97,7 @@ private:
     //private helper method CAN_message_t -> AbstractedCanPacket
 
     //reads bitWidth bits from msg and returns them. Also increments usedBits.
-    uint32_t readBitsHelper(uint8_t bitWidth, uint8_t offset);
+    int32_t readBitsHelper(int8_t bitWidth, int8_t offset);
 
     //handy function for visualizing binary data
     void printBits(int data, int size);
