@@ -30,16 +30,16 @@ CanBitBuffer::CanBitBuffer()
 {
     maxSize = 64;
     buf = new int8_t[getArraySize()];
-    reset();
+    resetForWrite();
     init();
 }
 CanBitBuffer::CanBitBuffer(int8_t* data, int sizeInBits)
 {
     init();
     buf = data;
-    maxSize = sizeInBits;    
-    reset();
-
+    maxSize = sizeInBits;
+    //reset();
+//need to reset only if writing to data stream
 }
 
 int CanBitBuffer::getMaxBufferSize()
@@ -129,6 +129,10 @@ void CanBitBuffer::writeBitsHelper(int32_t data, int8_t dataWidth, int8_t dataOf
 }
 void CanBitBuffer::writeBits(int32_t data, int8_t dataWidth)
 {
+    if(usedBits == 0)
+    {
+        resetForWrite();
+    }
     while (dataWidth > 0)
     {
         //you can only write as many bits the smaller of the current buffer free space and our input dataWidth
@@ -144,9 +148,9 @@ void CanBitBuffer::writeBits(int32_t data, int8_t dataWidth)
 int32_t CanBitBuffer::readBitsHelper(int8_t bitWidth, int8_t offset)
 {
     int8_t bufferIndex = getBufferIndex();
-    //Serial << "readBitsHelper: \n";
-    //Serial.print("bufferIndex: ");
-    //Serial.println(bufferIndex);
+    // Serial << "readBitsHelper: \n";
+    // Serial.print("bufferIndex: ");
+    // Serial.println(bufferIndex);
     int8_t bitIndex = getBitBoundaryIndex(bitWidth);
     config compression = {bitWidth, bitIndex};
     config extraction = {bitWidth, offset};
@@ -155,6 +159,7 @@ int32_t CanBitBuffer::readBitsHelper(int8_t bitWidth, int8_t offset)
 
     int32_t data;
     data = buf[bufferIndex];
+    //Serial << "buf[bufferIndex] " << buf[bufferIndex] << " data " << data << endl;
 
     //maps relevant bits in input to the right offset for the output
     int32_t selectedData = bitChopper.compress(compression, data);
@@ -177,7 +182,7 @@ int32_t CanBitBuffer::readBits(int8_t bitWidth)
     {
         //you can only write as many bits the smaller of the current buffer free space and our input dataWidth
         int8_t dataWidthHelper = min(getBufferFreeSpace(), bitWidth);
-        Serial << "getBufferFreeSpace() " << getBufferFreeSpace() << endl;
+        //Serial << "getBufferFreeSpace() " << getBufferFreeSpace() << endl;
         
         //start writing from the MSB to LSB, ie write left side first. Simplifies to 0 if we can write dataWidth bits
         int8_t dataOffset = bitWidth - dataWidthHelper;
@@ -187,7 +192,7 @@ int32_t CanBitBuffer::readBits(int8_t bitWidth)
     //Serial << "ReadBits return: " << toReturn << endl;
     return toReturn;
 }
-void CanBitBuffer::reset()
+void CanBitBuffer::resetForWrite()
 {
     usedBits = 0;
     int size = getArraySize();

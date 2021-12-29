@@ -4,8 +4,8 @@
 
 void setup()
 {
-  while (!Serial)//WARNING DISABLE BEFORE LAUNCH TESTING
-    ; //wait for serial to begin
+  while (!Serial) //WARNING DISABLE BEFORE LAUNCH TESTING
+    ;             //wait for serial to begin
 }
 
 void loop()
@@ -21,7 +21,7 @@ void loop()
   //   Serial << buf[i] << " ";
   // }
 
-  int32_t bitSize = 32*8;
+  int32_t bitSize = 32 * 8;
   CanBitBuffer bitBuffer(buf, bitSize);
   bitBuffer.printBuffer();
   Serial << "Free space: " << bitBuffer.getFreeBits() << endl;
@@ -47,14 +47,13 @@ void loop()
   {
     bitBuffer.writeBits(0b0001111000, 10);
     Serial << "Free space: " << bitBuffer.getFreeBits() << endl;
-
   }
   Serial << "Free space: " << bitBuffer.getFreeBits() << endl;
 
   while (bitBuffer.canFit(1))
   {
     //Serial << "here";
-    bitBuffer.writeBits(0b0, 1);
+    bitBuffer.writeBits(0b1, 1);
   }
 
   Serial << "binary CAN Message: ";
@@ -63,6 +62,8 @@ void loop()
 
   int8_t *output = bitBuffer.getBuffer(); //ready for CAN Bus
   //sendCAN frame here
+  // for (int i = 0; i < 32; i++)
+  //   Serial <<"output[i] " <<  output[i] << endl;
 
   //after CAN Receive
   CanBitBuffer fromCan(output, bitSize); //construct from external array
@@ -85,7 +86,6 @@ void loop()
   Serial << "data3:     " << data3 << endl;
   Serial << "data3Copy: " << data3Copy << endl
          << endl;
-
 
   while (fromCan.canFit(10))
   {

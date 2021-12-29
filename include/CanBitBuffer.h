@@ -22,7 +22,7 @@ class CanBitBuffer
 public:
     void init();
     CanBitBuffer();
-    CanBitBuffer(int8_t* data, int_fast32_t sizeInBits);
+    CanBitBuffer(int8_t* data, int sizeInBits);
 
     void writeBits(int32_t data, int8_t dataWidth);
     int32_t readBits(int8_t bitWidth);
@@ -38,7 +38,7 @@ public:
     void printBuffer();
 
 
-    void reset(); //resets CAN packet to be reused. Old Data is deleted.
+    void resetForWrite(); //resets CAN packet to be reused. Old Data is deleted.
 
 private:
     int8_t* buf;
